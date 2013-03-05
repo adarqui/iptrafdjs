@@ -1,0 +1,318 @@
+<!-- adarqui 2/20/2013 @ adarq.org -->
+<html>
+	<head>
+
+		<link href="iptraf.css" rel="stylesheet" type="text/css"/>
+		<link href="datatable.css" rel="stylesheet" type="text/css"/>
+<!--		<link href="js/jquery.powertip.css" rel="stylesheet" type="text/css"/> -->
+		<link href="css/jquery-ui.css" rel="stylesheet" type="text/css"/>
+		
+		<script src="js/underscore-min.js"></script>
+		<script src="js/jquery.min.js"></script>
+		<script src="js/jquery-ui.js"></script>
+		<script src="js/jquery.dataTables.js"></script>
+		<script src="js/ColumnFilterWidgets.js"></script>
+<!--		<script src="js/jquery.powertip-1.1.0.min.js"></script> -->
+		<script src="js/highcharts/js/highcharts.js"></script>
+		<script src="js/highcharts/js/exporting.js"></script>
+
+		<script src="include.js"></script>
+		<script src="iptraf.js"></script>
+
+
+		<!-- NODJS SUPPORT -->
+		<script src="/socket.io/socket.io.js"></script>
+
+		<title>IPTRAF Log Analyzer Tool</title>
+			
+	</head>
+
+	<body>
+
+
+		<h1 class="heading" align="center">IPTRAF Analyzer</h1>
+
+		<center><button id="export">EXPORT DATA</button></center>
+		<div id="export_dialog" title="Exported Results" style="display:none">
+			<textarea id="export_textarea" style="height:100%;width:100%"></textarea>
+		</div>
+
+		<div id="output">
+
+<div class="column">
+
+<div class="portlet">
+			<!--<h1 class="heading" align="center"><a href="#">Control Center</a></h1>-->
+			<div class="portlet-header">Control Center</div>
+				<div style="display:auto">
+<div class="portlet-content">
+					<p>
+
+				        <textarea id="input"></textarea>
+	
+        				<div id="menu">
+            				<button id="go">Go</button>
+            				<button id="reset">Reset</button>
+        				</div>
+
+				        <div id="options">
+            				<select id="filter" name="filter">
+								<option value="condense_smart">condense smart</option>
+                				<option value="condense">condense</option>
+                				<option value="iponly">ip only</option>
+                				<option value="full">full</option>
+            				</select>
+
+				            <select id="resolve" name="resolve">
+                				<option value="normal">normal</option>
+                				<option value="dns">dns</option>
+            				</select>
+
+            				<select id="mode" name="mode">
+                				<option value="manual">manual</option>
+                				<option value="iptraf">live: iptraf</option>
+                				<option value="pcap">live: pcap</option>
+            				</select>
+        				</div>
+					</p>
+</div> <!-- portlet-content -->
+				</div>
+</div> <!-- portlet -->
+
+
+<div class="portlet">
+			<!--<h1 class="heading" align="center"><a href="#">General Interface Statistics</a></h1>-->
+			<div class="portlet-header">General Interface Statistics</div>
+				<div style="display:auto">
+<div class="portlet-content">
+					<p>
+						<table id="summary" class="display" width="100%">
+							<!-- the overall summary -->
+							<thead id="summary_h">
+								<tr>
+									<th>Interface</th>
+									<th>Total Bytes</th>
+									<th>Total TCP</th>
+									<th>Total UDP</th>
+									<th>Total ICMP</th>
+									<th>Total Time</th>
+									<th>Time: Start</th>
+									<th>Time: End</th>
+								</tr>
+							</thead>
+							<tbody id="summary_b">
+							</tbody>
+						</table>	
+					</p>
+</div> <!-- portlet-content -->
+				</div>
+</div> <!-- portlet -->
+
+<div class="portlet">
+			<!--<h1 class="heading" align="center" class="graphsc"><a href="#">Graphs</a></h1> -->
+			<div class="portlet-header">Graphs</div>
+				<div style="display:auto">
+<div class="portlet-content">
+					<p>
+
+						<button id="graphsc">Enable</button>
+
+						<div id="tabs_graphs">
+
+							<ul>
+								<li><a href="#tabs_graphs_1">toptalk</a></li>
+								<li><a href="#tabs_graphs_2">summary</a></li>
+								<li><a href="#tabs_graphs_3">bandwidth</a></li>
+							</ul>
+
+							<div id="tabs_graphs_1">
+								<h2>Top Talkers</h2>
+								<p>
+
+									<button id="chart_toptalk_reset">Reset</button>
+
+									<div id="chart_toptalk" style="min-width: 400px; height: 300px; margin: 0 auto"></div>
+								</p>
+							</div>
+
+							<div id="tabs_graphs_2">
+								<h2>Summary</h2>
+								<p>
+									<button id="chart_summary_reset">Reset</button>
+
+									<div id="chart_summary" style="min-width: 400px; height: 300px; margin: 0 auto"></div>
+								</p>
+							</div>
+
+							<div id="tabs_graphs_3">
+								<h2>Bandwidth</h2>
+								<p>
+
+									<input id="chart_bandwidth_interval" type="text"/>
+									<button id="chart_bandwidth_save">Save</button>
+									<button id="chart_bandwidth_reset">Reset</button>
+
+									<div id="chart_bandwidth" style="min-width: 400px; height: 300px; margin 0 auto"></div>
+
+    <!-- end network -->
+    
+
+								</p>
+							</div>
+
+						</div>
+
+					</p>
+</div> <!-- portlet-content -->
+				</div>
+</div> <!-- portlet -->
+
+</div> <!-- .column -->
+
+<div class="column">
+
+
+<div class="portlet">
+			<!--<h1 class="heading" align="center"><a href="#">Top Talkers</a></h1>-->
+			<div class="portlet-header">Top Talkers</div>
+				<div>
+<div class="portlet-content">
+					<p>
+						<table id="toptalk" class="display" width="100%">
+							<!-- top talkers table -->
+							<thead id="toptalk_h">
+								<tr>
+									<th>Key</th>
+									<th>Interface</th>
+									<th>IP</th>
+									<th>Total Bytes</th>
+								</tr>
+							</thead>
+							<tbody id="toptalk_b">
+							</tbody>
+						</table>
+					</p>
+</div> <!-- portlet-content -->
+				</div>
+</div> <!-- portlet -->
+
+<div class="portlet">
+			<!--<h1 class="heading" align="center"><a href="#">About</a></h1> -->
+			<div class="portlet-header">About</div>
+				<div style="display:auto">
+<div class="portlet-content">
+					<p>
+						<h2>Well hello there.</h2>
+							<p>IPTRAF Analyzer is a quick concept code to help me analyze network logs (iptraf/pcap) & monitor my systems in real time.</p>
+							<p>-- adarqui</p>
+						<h2>How to use it?</h2>
+							<p><b>Live Mode:</b> Select "live: pcap" or "live: iptraf" to see the real time example</p>
+							<p><b>Manual Mode:</b> Paste an iptraf log, pcap log (tcpdump -K -tt -qnn ..), or iptraf_parser.pl output into the textbox at the top & click "go"</p>
+							<p><b>Copy & paste these files to test:</b><a href="dumps/pcap.txt" target="_blank">pcap</a> <a href="dumps/iptraf.txt" target="_blank">iptraf</a></p>
+							<p><b>Use this parser for huge logs:</b><a href="iptraf_parser.pl" target="_blank">parser.pl</a> <a href="dumps/parser.txt" target="_blank">(example parser output)</a></p>
+								<div style="margin-left:10px">
+									<p>How the parser works:</p>
+									<ol>
+										<li><b>Do a tcpdump capture on the box you're monitoring:</b> tcpdump -tt -nn -K -q -i eth0 -w pcap.dump</li>
+										<li><b>Run iptraf_parser.pl:</b> perl iptraf_parser.pl --in pcap.dump --condense > out.txt</li>
+										<li><b>Copy out.txt:</b> Copy it, then paste it in the text box in the control pane, using manual mode</li>
+										<li><b>Click go.</b></li>
+										<li><b>bam.</b></li>
+									</ol>
+								</div>
+							<p><b>Dragging divs:</b> You can drag divs to your liking. I prefer: charts (left,enabled), top talkers (upper right), general interface stats (below top talkers)</p>
+							<p><b>Testing the live pcap:</b> hping3 --rand-source -c 1000 --fast 8.8.8.8 ... is pretty fun</p>
+							<p><b>Export:</b> Click export to create a "text based output" of the parsed results</p>
+					</p>
+</div> <!-- portlet-content -->
+				</div>
+</div> <!-- portlet -->
+
+</div> <!-- column -->
+
+
+
+
+                        <!--<h1 class="heading" align="center"><a href="#">Full table</a></h1>-->
+                                <div style="display:auto">
+                                        <p>     
+                                                <table id="table" class="display" width="100%">
+                                                        <!-- the flow summary table -->
+                                                        <thead id="table_h">
+                                                                <tr>    
+                                                                        <th>Key</th>
+                                                                        <th>Interface</th>
+                                                                        <th>Protocol</th>
+                                                                        <th>Client IP</th>
+                                                                        <th>Client Port</th>
+                                                                        <th>Server IP</th>
+                                                                        <th>Server Port</th>
+                                                                        <th>Total Bytes</th>
+                                                                        <th>TX Cli to Serv</th>
+                                                                        <th>TX Serv to Cli</th>
+                                                                        <th>Total Time</th>
+                                                                        <th>Time: Start</th>
+                                                                        <th>Time: End</th>
+                                                                </tr>
+                                                        </thead>
+                                                        <tbody id="table_b">
+                                                        </tbody>
+                                                        <tfoot> 
+                                                                <tr>    
+                                                                        <th class="centered">
+                                                                                <input type="text" id="table_f_key" class="search_init" />
+                                                                        </th>
+                                    <th class="centered">
+                                        <input type="text" id="table_f_iface" class="search_init" />
+                                    </th>
+                                    <th class="centered">
+                                        <input type="text" id="table_f_proto" class="search_init" />
+                                    </th>
+                                    <th class="centered">
+                                        <input type="text" id="table_f_src" class="search_init" />
+                                    </th>
+                                    <th class="centered">
+                                        <input type="text" id="table_f_sport" class="search_init" />
+                                    </th>
+                                    <th class="centered">
+                                        <input type="text" id="table_f_dst" class="search_init" />
+                                    </th>
+                                     <th class="centered">
+                                        <input type="text" id="table_f_dport" class="search_init" />
+                                    </th>
+                                    <th class="centered">
+                                        <input type="text" id="table_f_iface" class="search_init" />
+                                    </th>
+                                    <th class="centered">
+                                        <input type="text" id="table_f_tot" class="search_init" />
+                                    </th>
+                                    <th class="centered">
+                                        <input type="text" id="table_f_tx_cli2srv" class="search_init" />
+                                    </th>
+                                      <th class="centered">
+                                        <input type="text" id="table_f_tx_srv2cli" class="search_init" />
+                                    </th>
+                                     <th class="centered">
+                                        <input type="text" id="table_f_ts_tot" class="search_init" />
+                                    </th>
+                                     <th class="centered">
+                                        <input type="text" id="table_f_ts_b" class="search_init" />
+                                    </th>
+                                     <th class="centered">
+                                        <input type="text" id="table_f_ts_e" class="search_init" />
+                                    </th>
+
+                                </tr>
+
+                                                        </tfoot>
+                                                </table>
+                                        </p>
+                                </div>
+
+
+
+
+		</div>
+
+	</body>
+</html>
